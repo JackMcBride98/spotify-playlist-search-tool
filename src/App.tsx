@@ -1,7 +1,6 @@
 import { v4 } from "uuid";
 import { useEffect, useState } from "react";
 import { ReactComponent as SearchIcon } from "./images/search.svg";
-
 interface Params {
   access_token?: string;
   token_type?: string;
@@ -25,6 +24,10 @@ interface UserProfile {
   uri: string;
 }
 
+//TODO: implement typing of playlists and tracks
+
+//TODO: error handling
+
 function getHashParams(): Params {
   let hashParams: Params = { state: null };
   let e,
@@ -43,6 +46,8 @@ function App() {
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [userPlaylists, setUserPlaylists] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+
   useEffect(() => {
     const params = getHashParams();
     const accessToken = params.access_token;
@@ -139,7 +144,32 @@ function App() {
     window.location.href = url;
   };
   const search = () => {
-    //TODO: implement search
+    const results = [];
+    userPlaylists.forEach((playlist) => {
+      for (let i = 0; i < playlist.tracks.length; i++) {
+        if (
+          playlist.tracks[i].name
+            .toUpperCase()
+            .includes(searchTerm.toUpperCase())
+        ) {
+          if (!results.includes(playlist)) {
+            playlist.firstMatchIndex = i;
+            results.push(playlist);
+            break;
+          }
+        }
+        if (
+          playlist.tracks[i].artists.some((artist) =>
+            artist.name.toUpperCase().includes(searchTerm.toUpperCase())
+          )
+        ) {
+          playlist.firstMatchIndex = i;
+          results.push(playlist);
+          break;
+        }
+      }
+    });
+    setSearchResults(results);
   };
   return (
     <div className="app flex flex-col items-center space-y-4 text-white w-full">
@@ -173,6 +203,10 @@ function App() {
               <SearchIcon className="w-5 h-5 fill-black bg-green-600" />
             </button>
           </div>
+          {/* Implement displaying search results */}
+          {searchResults.map((result) => (
+            <p className="text-white">{result.name}</p>
+          ))}
           <button
             className="text-center p-4 border rounded-md"
             onClick={() => {

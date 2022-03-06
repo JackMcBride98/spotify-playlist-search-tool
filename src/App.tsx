@@ -1,5 +1,6 @@
 import { v4 } from "uuid";
 import { useEffect, useState } from "react";
+import { ReactComponent as SearchIcon } from "./images/search.svg";
 
 interface Params {
   access_token?: string;
@@ -7,6 +8,21 @@ interface Params {
   expires_in?: number;
   state: string;
   error?: string;
+}
+
+interface UserProfile {
+  country: string;
+  display_name: string;
+  email: string;
+  explicit_content: { filter_enabled: boolean; filter_locked: boolean };
+  external_urls: { spotfiy: string };
+  followers: { href: string; total: number };
+  href: string;
+  id: string;
+  images: Array<{ url: string; height: number; width: number }>;
+  product: string;
+  type: string;
+  uri: string;
 }
 
 function getHashParams(): Params {
@@ -22,9 +38,13 @@ function getHashParams(): Params {
 
 function App() {
   const [accessToken, setAccessToken] = useState("");
+  const [userProfile, setUserProfile] = useState<UserProfile | undefined>(
+    undefined
+  );
+  const [searchTerm, setSearchTerm] = useState("");
+  const [userPlaylists, setUserPlaylists] = useState([]);
   useEffect(() => {
     const params = getHashParams();
-    console.log(params);
     const accessToken = params.access_token;
     const state = params.state;
     const storedState = localStorage.getItem("spotifyAuthState");
@@ -34,7 +54,63 @@ function App() {
     } else {
       localStorage.removeItem("spotifyAuthState");
       if (accessToken) {
-        setAccessToken(accessToken);
+        const fetchUserInfo = async () => {
+          const result: UserProfile = await fetch(
+            "https://api.spotify.com/v1/me",
+            {
+              headers: {
+                Authorization: "Bearer " + accessToken,
+              },
+            }
+          ).then((res) => res.json());
+          setUserProfile(result);
+          setAccessToken(accessToken);
+          const userPlaylists = [];
+          let playlistFetch = await fetch(
+            `https://api.spotify.com/v1/users/${result.id}/playlists?offset=0&limit=50`,
+            {
+              headers: {
+                Authorization: "Bearer " + accessToken,
+              },
+            }
+          ).then((res) => res.json());
+          userPlaylists.push(...playlistFetch.items);
+          while (playlistFetch.next) {
+            playlistFetch = await fetch(playlistFetch.next, {
+              headers: {
+                Authorization: "Bearer " + accessToken,
+              },
+            }).then((res) => res.json());
+            userPlaylists.push(...playlistFetch.items);
+          }
+          const playlistsTracksInfo = await Promise.all(
+            userPlaylists.map(async (playlist) => {
+              const playlistTracks = [];
+              let playlistFetch2 = await fetch(playlist.tracks.href, {
+                headers: {
+                  Authorization: "Bearer " + accessToken,
+                },
+              }).then((res) => res.json());
+              playlistTracks.push(...playlistFetch2.items);
+              while (playlistFetch2.next) {
+                playlistFetch2 = await fetch(playlistFetch2.next, {
+                  headers: {
+                    Authorization: "Bearer " + accessToken,
+                  },
+                }).then((res) => res.json());
+                playlistTracks.push(...playlistFetch2.items);
+              }
+              return playlistTracks;
+            })
+          );
+          userPlaylists.forEach((playlist, index) => {
+            playlist.tracks = playlistsTracksInfo[index].map(
+              (info) => info.track
+            );
+          });
+          setUserPlaylists(userPlaylists);
+        };
+        fetchUserInfo();
       } else {
         setAccessToken("");
       }
@@ -49,7 +125,6 @@ function App() {
     const redirect_uri = "http://localhost:3000";
 
     const state = v4().replace(/-/g, "").slice(0, 16);
-    console.log(state);
 
     localStorage.setItem("spotifyAuthState", state);
     const scope = "user-read-private user-read-email";
@@ -63,18 +138,55 @@ function App() {
 
     window.location.href = url;
   };
-
+  const search = () => {
+    //TODO: implement search
+  };
   return (
-    <div className="app flex flex-col items-center">
-      <h1 className="p-4 text-center text-3xl font-semibold">
-        Spotify Playlist Searcher Tool
+    <div className="app flex flex-col items-center space-y-4 text-white w-full">
+      <h1 className=" text-center text-xl lg:text-3xl font-semibold">
+        Spotify Playlist Search Tool
       </h1>
       {accessToken ? (
-        <div>Access token </div>
+        <>
+          <p>Hello {userProfile?.display_name.split(" ")[0]}</p>
+          <img
+            className="rounded-full"
+            src={userProfile?.images[0]?.url}
+            width={150}
+            height={150}
+            alt="User's spotify profile"
+          ></img>
+          <div className="md:w-80 w-72 flex items-center space-x-2 bg-green-600 rounded-md pr-2 p-1">
+            <input
+              className="p-2 outline-0 bg-black w-full overflow-visible"
+              type="text"
+              placeholder="Search for songs or artists"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  search();
+                }
+              }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button onClick={() => search()}>
+              <SearchIcon className="w-5 h-5 fill-black bg-green-600" />
+            </button>
+          </div>
+          <button
+            className="text-center p-4 border rounded-md"
+            onClick={() => {
+              setAccessToken("");
+              window.location.href = "";
+            }}
+          >
+            Logout
+          </button>
+        </>
       ) : (
         <button
-          onClick={(e) => login(e)}
           className="text-center p-4 border rounded-md"
+          onClick={(e) => login(e)}
         >
           Login
         </button>

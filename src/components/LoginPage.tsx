@@ -6,8 +6,12 @@ export default function LoginPage({ login }) {
   const [logoClicked, setLogoClicked] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => setLogoClicked(true), 250);
-    setTimeout(() => setLogoClicked(false), 1050);
+    let timer1 = setTimeout(() => setLogoClicked(true), 250);
+    let timer2 = setTimeout(() => setLogoClicked(false), 1050);
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
   }, []);
 
   return (

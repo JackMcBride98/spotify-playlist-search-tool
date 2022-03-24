@@ -16,15 +16,14 @@ export default function Playlist({ playlist, searchedTerm }) {
           )
       );
       setFirstMatchIndex(playlist.tracks.indexOf(firstMatch));
-      setTimeout(() => {
+      let timer1 = setTimeout(() => {
         ref.current.scrollBehaviour = "smooth";
         ref.current.scrollTop =
           firstMatchRef.current.offsetTop - ref.current.offsetTop;
       }, 500);
+      return () => clearTimeout(timer1);
     }
   }, [searchedTerm, playlist.tracks]);
-
-  console.log(playlist);
 
   return (
     <div className="m-2 p-2 md:w-full md: max-w-md justify-start w-72 border-gray-600 border-2 rounded-md">
@@ -60,18 +59,30 @@ export default function Playlist({ playlist, searchedTerm }) {
         ref={ref}
         style={{ scrollBehavior: "smooth" }}
       >
-        {playlist.tracks.map((track, index) => (
-          <p
-            className="border-b border-gray-300 p-2"
-            ref={index === firstMatchIndex ? firstMatchRef : null}
-          >
-            <span className="text-gray-200 font-light mr-2">{index + 1}</span>{" "}
-            {track.name} -{" "}
-            <span className="text-white font-light">
-              {track.artists.map((artist) => artist.name).join(", ")}
-            </span>
-          </p>
-        ))}
+        {playlist.tracks.map((track, index) => {
+          const isMatch =
+            track.name.toUpperCase().includes(searchedTerm.toUpperCase()) ||
+            track.artists.some((artist) =>
+              artist.name.toUpperCase().includes(searchedTerm.toUpperCase())
+            );
+          return (
+            <p
+              className={
+                "border-b border-gray-300 p-2 " +
+                (isMatch
+                  ? "bg-gradient-to-r from-green-600/80 via-black  to-green-600/80 "
+                  : "")
+              }
+              ref={index === firstMatchIndex ? firstMatchRef : null}
+            >
+              <span className="text-gray-200 font-light mr-2">{index + 1}</span>{" "}
+              {track.name} -{" "}
+              <span className="text-white font-light">
+                {track.artists.map((artist) => artist.name).join(", ")}
+              </span>
+            </p>
+          );
+        })}
       </div>
     </div>
   );

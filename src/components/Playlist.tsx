@@ -39,6 +39,14 @@ export default function Playlist({ playlist, searchedTerm }) {
         <div className="w-full">
           <h1 className="text-lg">{playlist.name}</h1>
           <p className="text-sm">{playlist.owner.display_name}</p>
+          <a
+            href={`spotify:playlist:${playlist.id}`}
+            rel="noreferrer"
+            target="_blank"
+            className="text-base text-green-300 hover:italic"
+          >
+            Link
+          </a>
           <p
             className="text-xs break-words w-44 md:w-[19rem] font-light text-slate-200"
             dangerouslySetInnerHTML={{

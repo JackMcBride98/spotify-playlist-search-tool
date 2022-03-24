@@ -84,7 +84,6 @@ function App() {
               },
             }
           ).then((res) => res.json());
-          console.log({ playlistFetch });
           userPlaylists.push(...playlistFetch.items);
           while (playlistFetch.next) {
             playlistFetch = await fetch(playlistFetch.next, {

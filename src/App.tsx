@@ -2,6 +2,8 @@ import { v4 } from "uuid";
 import { useEffect, useState } from "react";
 import { ReactComponent as SearchIcon } from "./images/search.svg";
 import Playlist from "./components/Playlist";
+import { motion } from "framer-motion";
+
 interface Params {
   access_token?: string;
   token_type?: string;
@@ -50,8 +52,11 @@ function App() {
   const [userPlaylists, setUserPlaylists] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [showSecretSVG, setShowSecretSVG] = useState(false);
+  const [logoClicked, setLogoClicked] = useState(false);
 
   useEffect(() => {
+    setLogoClicked(true);
+    setTimeout(() => setLogoClicked(false), 750);
     const params = getHashParams();
     const accessToken = params.access_token;
     const state = params.state;
@@ -175,7 +180,7 @@ function App() {
     setSearchResults(results);
   };
   return (
-    <div className="app flex flex-col items-center space-y-4 text-white w-full">
+    <div className="app flex flex-col items-center space-y-4 text-white w-full pb-4">
       <h1 className=" text-center text-xl lg:text-3xl font-semibold">
         Spotify Playlist Search Tool
       </h1>
@@ -224,37 +229,118 @@ function App() {
       ) : (
         <>
           <svg className="w-72 h-72" viewBox="0 0 100 100">
-            <circle className="fill-green-600" cx="50" cy="50" r="40" />
-            <path
-              className="stroke-black hover:stroke-white"
+            <circle
+              className="fill-green-600"
+              cx="50"
+              cy="50"
+              r="40"
+              onClick={() => {
+                setLogoClicked(true);
+                setTimeout(() => setLogoClicked(false), 750);
+              }}
+            />
+            <motion.path
+              variants={{
+                first: {
+                  d: [
+                    "M 31 62 Q 50 56, 67 66",
+                    "M 31 62 Q 50 30, 67 66",
+                    "M 31 62 Q 50 60, 67 66",
+                    "M 31 62 Q 50 56, 67 66",
+                  ],
+                  transition: {
+                    duration: 0.6,
+                    ease: "easeOut",
+                  },
+                },
+              }}
+              animate={logoClicked ? "first" : ""}
+              className="stroke-black"
               d="M 31 62 Q 50 56, 67 66"
               fill="transparent"
               strokeLinecap="round"
               strokeWidth="5"
-              // strokeDasharray=" 1 8"
               strokeDashoffset="0"
             />
-            <path
-              className="stroke-black hover:stroke-white"
+            <motion.path
+              variants={{
+                first: {
+                  d: [
+                    "M 29 49 Q 51 42, 72 54",
+                    "M 29 49 Q 51 20, 72 54",
+                    "M 29 49 Q 51 46, 72 54",
+                    "M 29 49 Q 51 42, 72 54",
+                  ],
+                  transition: {
+                    duration: 0.6,
+                    ease: "easeOut",
+                  },
+                },
+              }}
+              animate={logoClicked ? "first" : ""}
+              className="stroke-black"
               d="M 29 49 Q 51 42, 72 54"
               fill="transparent"
               strokeLinecap="round"
               strokeWidth="6"
             />
-            <path
-              className="stroke-black hover:stroke-white"
+            <motion.path
+              variants={{
+                first: {
+                  d: [
+                    "M 26 36 Q 52 27 ,76 40",
+                    "M 26 36 Q 52 10 ,76 40",
+                    "M 26 36 Q 52 33 ,76 40",
+                    "M 26 36 Q 52 27 ,76 40",
+                  ],
+                  transition: {
+                    duration: 0.6,
+                    ease: "easeOut",
+                  },
+                },
+              }}
+              animate={logoClicked ? "first" : ""}
+              stroke="black"
               d="M 26 36 Q 52 27 , 76 40"
               fill="transparent"
               strokeLinecap="round"
               strokeWidth="7"
             />
           </svg>
-          <button
-            className="text-center p-4 border rounded-md"
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="text-center p-4 rounded-full bg-green-600 flex space-x-2 items-center "
             onClick={(e) => login(e)}
           >
-            Login
-          </button>
+            <svg className="w-7 h-7" viewBox="0 0 100 100">
+              <circle className="fill-white" cx="50" cy="50" r="40" />
+              <path
+                className="stroke-green-600"
+                d="M 31 62 Q 50 56, 67 66"
+                fill="transparent"
+                strokeLinecap="round"
+                strokeWidth="5"
+                // strokeDasharray=" 1 8"
+                strokeDashoffset="0"
+              />
+              <path
+                className="stroke-green-600"
+                d="M 29 49 Q 51 42, 72 54"
+                fill="transparent"
+                strokeLinecap="round"
+                strokeWidth="6"
+              />
+              <path
+                className="stroke-green-600"
+                d="M 26 36 Q 52 27 , 76 40"
+                fill="transparent"
+                strokeLinecap="round"
+                strokeWidth="7"
+              />
+            </svg>
+            <p>Login with Spotify</p>
+          </motion.button>
           <svg className="w-72 h-72" viewBox="0 0 100 100">
             <defs>
               <linearGradient id="gradient" gradientTransform="rotate(90)">
@@ -313,27 +399,26 @@ function App() {
             </defs>
             <circle fill="url(#pattern)" cx="50" cy="50" r="40" />
             <path
-              d="M 25 35 A 3.5 3.5 0 0 0 30 40 Q 50 29, 73 42 A 3 3 0 0 0 77 37 Q 50 21  ,25 35 "
-              stroke="black"
-              fill="black"
-              strokeWidth="1"
-              strokeOpacity={0.7}
+              className="stroke-black"
+              d="M 31 62 Q 50 56, 67 66"
+              fill="transparent"
+              strokeLinecap="round"
+              strokeWidth="5"
+              strokeDashoffset="0"
             />
-
             <path
-              d="M 26 53 A 3 3 0 0 0 30 57 Q 50 45 , 70 58 A 3 3 0 0 0 74 54 Q 50 37 , 26 53"
-              stroke="black"
-              fill="black"
-              strokeWidth="1"
-              strokeOpacity={0.7}
+              className="stroke-black"
+              d="M 29 49 Q 51 42, 72 54"
+              fill="transparent"
+              strokeLinecap="round"
+              strokeWidth="6"
             />
-
             <path
-              d="M 30 67 A 2.5 2.5 0 0 0 33 71 Q 50 63, 67 73 A 2.5 2.5 0 0 0 70 69 Q 50 57, 30 67 "
-              stroke="black"
-              fill="black"
-              strokeWidth="1"
-              strokeOpacity={0.7}
+              className="stroke-black"
+              d="M 26 36 Q 52 27 , 76 40"
+              fill="transparent"
+              strokeLinecap="round"
+              strokeWidth="7"
             />
           </svg>
           <button

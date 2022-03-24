@@ -84,6 +84,7 @@ function App() {
               },
             }
           ).then((res) => res.json());
+          console.log({ playlistFetch });
           userPlaylists.push(...playlistFetch.items);
           while (playlistFetch.next) {
             playlistFetch = await fetch(playlistFetch.next, {
@@ -191,7 +192,10 @@ function App() {
             height={150}
             alt="User's spotify profile"
           ></img>
-          <div className="md:w-80 w-72 flex items-center space-x-2 bg-green-600 rounded-md pr-2 p-1">
+          <motion.div
+            whileTap={{ scale: 0.9 }}
+            className="md:w-80 w-72 flex items-center space-x-2 bg-green-600 rounded-md pr-2 p-1"
+          >
             <input
               className="p-2 outline-0 bg-black w-full overflow-visible"
               type="text"
@@ -210,18 +214,23 @@ function App() {
             <button
               onClick={() => {
                 if (searchTerm) {
+                  setSearchedTerm(searchTerm);
                   search();
                 }
               }}
             >
               <SearchIcon className="w-5 h-5 fill-black bg-green-600" />
             </button>
-          </div>
+          </motion.div>
           {searchResults.map((result) => (
             <Playlist playlist={result} searchedTerm={searchedTerm} />
           ))}
-          {}
-          <button
+          {searchedTerm && searchResults.length === 0 && (
+            <p>No results found</p>
+          )}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             className="text-center p-4 border rounded-md"
             onClick={() => {
               setAccessToken("");
@@ -229,7 +238,7 @@ function App() {
             }}
           >
             Logout
-          </button>
+          </motion.button>
         </>
       ) : (
         <LoginPage login={login} />

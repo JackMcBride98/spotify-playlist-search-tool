@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
 export default function Playlist({ playlist, searchedTerm }) {
-  console.log(searchedTerm);
   const ref = useRef(null);
   const firstMatchRef = useRef(null);
   const [firstMatchIndex, setFirstMatchIndex] = useState(null);
@@ -25,7 +24,7 @@ export default function Playlist({ playlist, searchedTerm }) {
     }
   }, [searchedTerm, playlist.tracks]);
 
-  useEffect(() => {}, []);
+  console.log(playlist);
 
   return (
     <div className="m-2 p-2 md:w-full md: max-w-md justify-start w-72 border-gray-600 border-2 rounded-md">
@@ -40,6 +39,12 @@ export default function Playlist({ playlist, searchedTerm }) {
         <div className="w-full">
           <h1 className="text-lg">{playlist.name}</h1>
           <p className="text-sm">{playlist.owner.display_name}</p>
+          <p
+            className="text-xs break-words w-44 md:w-[19rem] font-light text-slate-200"
+            dangerouslySetInnerHTML={{
+              __html: playlist.description,
+            }}
+          ></p>
         </div>
       </div>
       <div

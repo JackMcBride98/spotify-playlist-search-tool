@@ -6,8 +6,8 @@ export default function LoginPage({ login }) {
   const [logoClicked, setLogoClicked] = useState(false);
 
   useEffect(() => {
-    setLogoClicked(true);
-    setTimeout(() => setLogoClicked(false), 750);
+    setTimeout(() => setLogoClicked(true), 250);
+    setTimeout(() => setLogoClicked(false), 1050);
   }, []);
 
   return (
@@ -125,86 +125,6 @@ export default function LoginPage({ login }) {
         </svg>
         <p>Login with Spotify</p>
       </motion.button>
-      <svg className="w-72 h-72" viewBox="0 0 100 100">
-        <defs>
-          <linearGradient id="gradient" gradientTransform="rotate(90)">
-            <stop
-              className="stop2 fill-green-600 text-green-600"
-              offset="10%"
-              stopColor="currentColor"
-            />
-            <stop
-              className="stop2 text-green-200"
-              offset="100%"
-              stopColor="currentColor"
-            />
-          </linearGradient>
-          <radialGradient
-            id="radial"
-            cx="0.5"
-            cy="0.5"
-            fx="0.5"
-            fy="0.5"
-            r="0.1"
-            spreadMethod="reflect"
-          >
-            <stop
-              className="stop2 fill-green-600 text-green-600"
-              offset="0%"
-              stopColor="currentColor"
-            />
-            <stop className="stop2" offset="100%" stopColor="white" />
-          </radialGradient>
-          <pattern
-            id="pattern"
-            x="0"
-            y="0"
-            width="10"
-            height="10"
-            patternUnits="userSpaceOnUse"
-          >
-            <rect x="0" y="0" width="10" height="10" fill="skyblue" />
-            <circle
-              cx="5"
-              cy="5"
-              r="12"
-              fill="url(#radial)"
-              fillOpacity="0.5"
-            />
-            <rect
-              x="0"
-              y="0"
-              width="5"
-              height="5"
-              fill="blue"
-              fillOpacity="0.25"
-            />
-          </pattern>
-        </defs>
-        <circle fill="url(#pattern)" cx="50" cy="50" r="40" />
-        <path
-          className="stroke-black"
-          d="M 31 62 Q 50 56, 67 66"
-          fill="transparent"
-          strokeLinecap="round"
-          strokeWidth="5"
-          strokeDashoffset="0"
-        />
-        <path
-          className="stroke-black"
-          d="M 29 49 Q 51 42, 72 54"
-          fill="transparent"
-          strokeLinecap="round"
-          strokeWidth="6"
-        />
-        <path
-          className="stroke-black"
-          d="M 26 36 Q 52 27 , 76 40"
-          fill="transparent"
-          strokeLinecap="round"
-          strokeWidth="7"
-        />
-      </svg>
       <button
         className="ml-16 text-center text-black p-4 rounded-md cursor-default"
         onClick={() => setShowSecretSVG(!showSecretSVG)}

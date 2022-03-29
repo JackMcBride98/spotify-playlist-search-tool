@@ -1,9 +1,11 @@
 import { v4 } from "uuid";
 import { useEffect, useState } from "react";
-import { ReactComponent as SearchIcon } from "./images/search.svg";
 import Playlist from "./components/Playlist";
 import { motion } from "framer-motion";
 import LoginPage from "./components/LoginPage";
+import _ from "lodash";
+import LZstring from "lz-string";
+import SearchBar from "./components/SearchBar";
 
 interface Params {
   access_token?: string;
@@ -48,16 +50,18 @@ function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | undefined>(
     undefined
   );
-  const [searchTerm, setSearchTerm] = useState("");
   const [searchedTerm, setSearchedTerm] = useState("");
   const [userPlaylists, setUserPlaylists] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
+  const [totalPlaylists, setTotalPlaylists] = useState(0);
+  const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(false);
 
   useEffect(() => {
     const params = getHashParams();
     const accessToken = params.access_token;
     const state = params.state;
     const storedState = localStorage.getItem("spotifyAuthState");
+    let timer;
 
     if (accessToken && (state == null || state !== storedState)) {
       setAccessToken("");
@@ -75,50 +79,85 @@ function App() {
           ).then((res) => res.json());
           setUserProfile(result);
           setAccessToken(accessToken);
-          const userPlaylists = [];
-          let playlistFetch = await fetch(
-            `https://api.spotify.com/v1/users/${result.id}/playlists?offset=0&limit=50`,
-            {
-              headers: {
-                Authorization: "Bearer " + accessToken,
-              },
-            }
-          ).then((res) => res.json());
-          userPlaylists.push(...playlistFetch.items);
-          while (playlistFetch.next) {
-            playlistFetch = await fetch(playlistFetch.next, {
-              headers: {
-                Authorization: "Bearer " + accessToken,
-              },
-            }).then((res) => res.json());
+          const storedUserPlaylists = localStorage.getItem("userPlaylists");
+          setIsLoadingPlaylists(true);
+          if (!storedUserPlaylists) {
+            const userPlaylists = [];
+            let playlistFetch = await fetch(
+              `https://api.spotify.com/v1/users/${result.id}/playlists?offset=0&limit=50`,
+              {
+                headers: {
+                  Authorization: "Bearer " + accessToken,
+                },
+              }
+            ).then((res) => res.json());
             userPlaylists.push(...playlistFetch.items);
-          }
-          const playlistsTracksInfo = await Promise.all(
-            userPlaylists.map(async (playlist) => {
-              const playlistTracks = [];
-              let playlistFetch2 = await fetch(playlist.tracks.href, {
+            while (playlistFetch.next) {
+              playlistFetch = await fetch(playlistFetch.next, {
                 headers: {
                   Authorization: "Bearer " + accessToken,
                 },
               }).then((res) => res.json());
-              playlistTracks.push(...playlistFetch2.items);
+              userPlaylists.push(...playlistFetch.items);
+            }
+            //Cleaning up the playlists so that they fit in local storage
+            userPlaylists.forEach((playlist) => {
+              delete playlist.collaborative;
+              delete playlist.href;
+              delete playlist.primary_color;
+              delete playlist.public;
+              delete playlist.snapshot_id;
+              delete playlist.type;
+              delete playlist.uri;
+              delete playlist.owner.external_urls;
+              delete playlist.owner.href;
+              delete playlist.owner.id;
+              delete playlist.owner.type;
+              delete playlist.owner.uri;
+            });
+            setTotalPlaylists(userPlaylists.length);
+            for (let i = 0; i < userPlaylists.length; i++) {
+              let playlistTracks = [];
+              let playlistFetch2 = await fetch(userPlaylists[i].tracks.href, {
+                headers: {
+                  Authorization: "Bearer " + accessToken,
+                },
+              }).then((res) => res.json());
+              if (playlistFetch2.items) {
+                playlistTracks.push(...playlistFetch2.items);
+              }
               while (playlistFetch2.next) {
                 playlistFetch2 = await fetch(playlistFetch2.next, {
                   headers: {
                     Authorization: "Bearer " + accessToken,
                   },
                 }).then((res) => res.json());
-                playlistTracks.push(...playlistFetch2.items);
+                if (playlistFetch2.items) {
+                  playlistTracks.push(...playlistFetch2.items);
+                }
               }
-              return playlistTracks;
-            })
-          );
-          userPlaylists.forEach((playlist, index) => {
-            playlist.tracks = playlistsTracksInfo[index].map(
-              (info) => info.track
+              userPlaylists[i].tracks = playlistTracks.map((info) =>
+                _.pick(info.track, ["name", "artists", "id"])
+              );
+              setUserPlaylists(userPlaylists.slice(0, i + 1));
+            }
+            console.log(JSON.stringify(userPlaylists).length);
+            console.log(
+              LZstring.compress(JSON.stringify(userPlaylists)).length
             );
-          });
-          setUserPlaylists(userPlaylists);
+            localStorage.setItem(
+              "userPlaylists",
+              LZstring.compress(JSON.stringify(userPlaylists))
+            );
+            setIsLoadingPlaylists(false);
+          } else {
+            const uncompressedPlaylists = JSON.parse(
+              LZstring.decompress(storedUserPlaylists)
+            );
+            setUserPlaylists(uncompressedPlaylists);
+            setTotalPlaylists(uncompressedPlaylists.length);
+            timer = setTimeout(() => setIsLoadingPlaylists(false), 1500);
+          }
         };
         fetchUserInfo();
       } else {
@@ -126,7 +165,9 @@ function App() {
       }
     }
 
-    return () => {};
+    return () => {
+      clearTimeout(timer);
+    };
   }, []);
 
   const login = (e) => {
@@ -148,13 +189,14 @@ function App() {
 
     window.location.href = url;
   };
-  const search = () => {
+  const search = (searchTerm) => {
+    setSearchResults([]);
     const results = [];
     userPlaylists.forEach((playlist) => {
       for (let i = 0; i < playlist.tracks.length; i++) {
         if (
-          playlist.tracks[i].name
-            .toUpperCase()
+          playlist?.tracks[i]?.name
+            ?.toUpperCase()
             .includes(searchTerm.toUpperCase())
         ) {
           if (!results.includes(playlist)) {
@@ -164,8 +206,8 @@ function App() {
           }
         }
         if (
-          playlist.tracks[i].artists.some((artist) =>
-            artist.name.toUpperCase().includes(searchTerm.toUpperCase())
+          playlist?.tracks[i]?.artists?.some((artist) =>
+            artist?.name?.toUpperCase().includes(searchTerm.toUpperCase())
           )
         ) {
           playlist.firstMatchIndex = i;
@@ -176,6 +218,7 @@ function App() {
     });
     setSearchResults(results);
   };
+
   return (
     <div className="app flex flex-col items-center space-y-4 text-white w-full pb-4">
       <h1 className=" text-center text-xl lg:text-3xl font-semibold">
@@ -191,38 +234,26 @@ function App() {
             height={150}
             alt="User's spotify profile"
           ></img>
-          <motion.div
-            whileTap={{ scale: 0.9 }}
-            className="md:w-80 w-72 flex items-center space-x-2 bg-green-600 rounded-md pr-2 p-1"
-          >
-            <input
-              className="p-2 outline-0 bg-black w-full overflow-visible"
-              type="text"
-              placeholder="Search for songs or artists"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  if (searchTerm) {
-                    setSearchedTerm(searchTerm);
-                    search();
-                  }
-                }
-              }}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+          <SearchBar search={search} setSearchedTerm={setSearchedTerm} />
+          {isLoadingPlaylists && (
+            <p>
+              Loading your playlists... {userPlaylists.length} /{" "}
+              {totalPlaylists}
+            </p>
+          )}
+
+          {searchedTerm && (
+            <p>
+              {searchResults.length} matching out of {totalPlaylists} total
+              playlists
+            </p>
+          )}
+          {searchResults.map((result, index) => (
+            <Playlist
+              playlist={result}
+              searchedTerm={searchedTerm}
+              key={result?.id || index}
             />
-            <button
-              onClick={() => {
-                if (searchTerm) {
-                  setSearchedTerm(searchTerm);
-                  search();
-                }
-              }}
-            >
-              <SearchIcon className="w-5 h-5 fill-black bg-green-600" />
-            </button>
-          </motion.div>
-          {searchResults.map((result) => (
-            <Playlist playlist={result} searchedTerm={searchedTerm} />
           ))}
           {searchedTerm && searchResults.length === 0 && (
             <p>No results found</p>

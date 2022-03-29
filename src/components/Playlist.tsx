@@ -8,14 +8,14 @@ export default function Playlist({ playlist, searchedTerm }) {
     if (ref.current) {
       ref.current.scrollBehaviour = "auto";
       ref.current.scrollTop = 0;
-      const firstMatch = playlist.tracks.find(
+      const firstMatch = playlist?.tracks?.find(
         (track) =>
-          track.name.toUpperCase().includes(searchedTerm.toUpperCase()) ||
-          track.artists.some((artist) =>
-            artist.name.toUpperCase().includes(searchedTerm.toUpperCase())
+          track?.name?.toUpperCase().includes(searchedTerm.toUpperCase()) ||
+          track?.artists?.some((artist) =>
+            artist?.name?.toUpperCase().includes(searchedTerm.toUpperCase())
           )
       );
-      setFirstMatchIndex(playlist.tracks.indexOf(firstMatch));
+      setFirstMatchIndex(playlist?.tracks?.indexOf(firstMatch));
       let timer1 = setTimeout(() => {
         ref.current.scrollBehaviour = "smooth";
         ref.current.scrollTop =
@@ -36,8 +36,8 @@ export default function Playlist({ playlist, searchedTerm }) {
           alt="playlist"
         ></img>
         <div className="w-full">
-          <h1 className="text-lg">{playlist.name}</h1>
-          <p className="text-sm">{playlist.owner.display_name}</p>
+          <h1 className="text-lg">{playlist?.name}</h1>
+          <p className="text-sm">{playlist?.owner.display_name}</p>
           <a
             href={`spotify:playlist:${playlist.id}`}
             rel="noreferrer"
@@ -47,7 +47,7 @@ export default function Playlist({ playlist, searchedTerm }) {
             Link
           </a>
           <p
-            className="text-xs break-words w-44 md:w-[19rem] font-light text-slate-200"
+            className="text-xs break-words w-44 md:w-[19rem] font-light text-slate-200 mb-2"
             dangerouslySetInnerHTML={{
               __html: playlist.description,
             }}
@@ -61,9 +61,9 @@ export default function Playlist({ playlist, searchedTerm }) {
       >
         {playlist.tracks.map((track, index) => {
           const isMatch =
-            track.name.toUpperCase().includes(searchedTerm.toUpperCase()) ||
-            track.artists.some((artist) =>
-              artist.name.toUpperCase().includes(searchedTerm.toUpperCase())
+            track?.name?.toUpperCase().includes(searchedTerm.toUpperCase()) ||
+            track?.artists?.some((artist) =>
+              artist?.name?.toUpperCase().includes(searchedTerm.toUpperCase())
             );
           return (
             <p
@@ -73,12 +73,13 @@ export default function Playlist({ playlist, searchedTerm }) {
                   ? "bg-gradient-to-r from-green-600/80 via-black  to-green-600/80 "
                   : "")
               }
+              key={track.id + index.toString()}
               ref={index === firstMatchIndex ? firstMatchRef : null}
             >
               <span className="text-gray-200 font-light mr-2">{index + 1}</span>{" "}
-              {track.name} -{" "}
+              {track?.name} -{" "}
               <span className="text-white font-light">
-                {track.artists.map((artist) => artist.name).join(", ")}
+                {track?.artists?.map((artist) => artist.name).join(", ")}
               </span>
             </p>
           );

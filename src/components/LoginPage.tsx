@@ -131,7 +131,10 @@ export default function LoginPage({ login }) {
       </motion.button>
       <button
         className="ml-16 text-center text-black p-4 rounded-md cursor-default"
-        onClick={() => setShowSecretSVG(!showSecretSVG)}
+        onClick={() => {
+          setShowSecretSVG(!showSecretSVG);
+          setTimeout(() => setShowSecretSVG(false), 3000);
+        }}
       >
         Secret
       </button>

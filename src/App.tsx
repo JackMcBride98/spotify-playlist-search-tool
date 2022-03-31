@@ -191,6 +191,7 @@ function App() {
   };
   const search = (searchTerm) => {
     setSearchResults([]);
+    setSearchedTerm(searchTerm);
     const results = [];
     userPlaylists.forEach((playlist) => {
       for (let i = 0; i < playlist.tracks.length; i++) {
@@ -234,7 +235,7 @@ function App() {
             height={150}
             alt="User's spotify profile"
           ></img>
-          <SearchBar search={search} setSearchedTerm={setSearchedTerm} />
+          <SearchBar search={search} />
           {isLoadingPlaylists && (
             <p>
               Loading your playlists... {userPlaylists.length} /{" "}

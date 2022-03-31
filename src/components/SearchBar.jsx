@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { ReactComponent as SearchIcon } from "../images/search.svg";
 
-export default function SearchBar({ search, setSearchedTerm }) {
+export default function SearchBar({ search }) {
   const [searchTerm, setSearchTerm] = useState("");
 
   return (
@@ -17,7 +17,6 @@ export default function SearchBar({ search, setSearchedTerm }) {
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             if (searchTerm) {
-              setSearchedTerm(searchTerm);
               search(searchTerm);
             }
           }
@@ -29,7 +28,6 @@ export default function SearchBar({ search, setSearchedTerm }) {
         className=" p-2"
         onClick={() => {
           if (searchTerm) {
-            setSearchedTerm(searchTerm);
             search(searchTerm);
           }
         }}

@@ -83,8 +83,16 @@ function App() {
           setUserProfile(result);
           setAccessToken(accessToken);
           const storedUserPlaylists = localStorage.getItem("userPlaylists");
+          let findIt;
+          let uncompressed;
+          if (storedUserPlaylists) {
+            const uncompressed = JSON.parse(
+              LZstring.decompress(storedUserPlaylists)
+            );
+            findIt = uncompressed.find((el) => el.userID === result.id);
+          }
           setIsLoadingPlaylists(true);
-          if (!storedUserPlaylists) {
+          if (!findIt) {
             const userPlaylists = [];
             let playlistFetch = await fetch(
               `https://api.spotify.com/v1/users/${result.id}/playlists?offset=0&limit=50`,
@@ -177,15 +185,22 @@ function App() {
             }
             localStorage.setItem(
               "userPlaylists",
-              LZstring.compress(JSON.stringify(userPlaylists))
+              LZstring.compress(
+                JSON.stringify([
+                  { userID: result.id, playlists: userPlaylists },
+                  ...(uncompressed ? uncompressed : []),
+                ])
+              )
             );
+
             setIsLoadingPlaylists(false);
           } else {
-            const uncompressedPlaylists = JSON.parse(
-              LZstring.decompress(storedUserPlaylists)
-            );
-            setUserPlaylists(uncompressedPlaylists);
-            setTotalPlaylists(uncompressedPlaylists.length);
+            // console.log(storedUserPlaylists.length);
+            // const uncompressedPlaylists = JSON.parse(
+            //   LZstring.decompress(storedUserPlaylists)
+            // );
+            setUserPlaylists(findIt.playlists);
+            setTotalPlaylists(findIt.playlists.length);
             timer = setTimeout(() => setIsLoadingPlaylists(false), 1500);
           }
         };

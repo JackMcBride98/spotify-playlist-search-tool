@@ -56,6 +56,8 @@ function App() {
   const [totalPlaylists, setTotalPlaylists] = useState(0);
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(false);
   const [errMsg, setErrMsg] = useState("");
+  const [dots, setDots] = useState("");
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
 
   const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -65,6 +67,13 @@ function App() {
     const state = params.state;
     const storedState = localStorage.getItem("spotifyAuthState");
     let timer;
+    document.addEventListener("scroll", function () {
+      if (document.scrollingElement.scrollTop > 500) {
+        setShowScrollToTop(true);
+      } else {
+        setShowScrollToTop(false);
+      }
+    });
 
     if (accessToken && (state == null || state !== storedState)) {
       setAccessToken("");
@@ -92,6 +101,10 @@ function App() {
             findIt = uncompressed.find((el) => el.userID === result.id);
           }
           setIsLoadingPlaylists(true);
+          let dotsInterval = setInterval(
+            () => setDots((d) => (d.length > 2 ? "" : d + ".")),
+            333
+          );
           if (!findIt) {
             const userPlaylists = [];
             let priorRetryAfter;
@@ -228,10 +241,14 @@ function App() {
             );
 
             setIsLoadingPlaylists(false);
+            clearInterval(dotsInterval);
           } else {
             setUserPlaylists(findIt.playlists);
             setTotalPlaylists(findIt.playlists.length);
-            timer = setTimeout(() => setIsLoadingPlaylists(false), 1500);
+            timer = setTimeout(() => {
+              setIsLoadingPlaylists(false);
+              clearInterval(dotsInterval);
+            }, 1500);
           }
         };
         fetchUserInfo();
@@ -300,7 +317,7 @@ function App() {
   };
 
   return (
-    <div className="app flex flex-col items-center space-y-4 text-white w-full pb-4">
+    <div className="app flex flex-col items-center space-y-4 text-white w-full pb-4 relative h-full overflow-hidden">
       <h1 className=" text-center text-xl lg:text-3xl font-semibold">
         Spotify Playlist Search Tool
       </h1>
@@ -318,8 +335,12 @@ function App() {
           {errMsg && <p className="text-red-600">{errMsg}</p>}
           {isLoadingPlaylists && (
             <p>
-              Loading your playlists... {userPlaylists.length} /{" "}
-              {totalPlaylists}
+              Loading your playlists
+              <span className="w-2 inline-block">{dots}</span>{" "}
+              {userPlaylists.length} / {totalPlaylists} <br />
+              <span className="text-xs -mt-1">
+                (You can search just the loaded ones)
+              </span>
             </p>
           )}
           {!isLoadingPlaylists && (
@@ -331,6 +352,31 @@ function App() {
               {searchResults.length} matching out of {totalPlaylists} total
               playlists
             </p>
+          )}
+          {console.log(showScrollToTop)}
+          {searchResults.length > 0 && (
+            <motion.button
+              onClick={() =>
+                document.scrollingElement.scrollIntoView({ behavior: "smooth" })
+              }
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className={
+                "rounded-full text-black text-xl bg-green-600 w-12 h-12 md:w-20 md:h-20  text-center fixed transition-all bottom-2 md:bottom-4 right-2 md:right-28 opacity-80 hover:opacity-100 focus:opacity-100 " +
+                (!showScrollToTop && "-bottom-24 md:-bottom-24")
+              }
+            >
+              <svg
+                className={"w-12 h-12 md:w-20 md:h-20"}
+                viewBox="0 0 100 100"
+              >
+                <polygon
+                  points="47,75 47,50 38,50 50,28 62,50 53,50 53,75"
+                  fill="black"
+                  stroke="black"
+                />
+              </svg>
+            </motion.button>
           )}
           {searchResults.map((result, index) => (
             <Playlist

@@ -229,10 +229,6 @@ function App() {
 
             setIsLoadingPlaylists(false);
           } else {
-            // console.log(storedUserPlaylists.length);
-            // const uncompressedPlaylists = JSON.parse(
-            //   LZstring.decompress(storedUserPlaylists)
-            // );
             setUserPlaylists(findIt.playlists);
             setTotalPlaylists(findIt.playlists.length);
             timer = setTimeout(() => setIsLoadingPlaylists(false), 1500);
@@ -257,7 +253,8 @@ function App() {
     const state = v4().replace(/-/g, "").slice(0, 16);
 
     localStorage.setItem("spotifyAuthState", state);
-    const scope = "user-read-private user-read-email";
+    const scope =
+      "user-read-private user-read-email playlist-read-private playlist-read-collaborative";
 
     let url = "https://accounts.spotify.com/authorize";
     url += "?response_type=token";
@@ -271,6 +268,9 @@ function App() {
   const search = (searchTerm) => {
     setSearchResults([]);
     setSearchedTerm(searchTerm);
+    if (!searchTerm) {
+      return;
+    }
     const results = [];
     userPlaylists.forEach((playlist) => {
       for (let i = 0; i < playlist.tracks.length; i++) {

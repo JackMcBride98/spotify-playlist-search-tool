@@ -55,6 +55,9 @@ function App() {
   const [searchResults, setSearchResults] = useState([]);
   const [totalPlaylists, setTotalPlaylists] = useState(0);
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(false);
+  const [errMsg, setErrMsg] = useState("");
+
+  const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
   useEffect(() => {
     const params = getHashParams();
@@ -118,20 +121,51 @@ function App() {
             setTotalPlaylists(userPlaylists.length);
             for (let i = 0; i < userPlaylists.length; i++) {
               let playlistTracks = [];
+              let firstRetryAfter;
               let playlistFetch2 = await fetch(userPlaylists[i].tracks.href, {
                 headers: {
                   Authorization: "Bearer " + accessToken,
                 },
-              }).then((res) => res.json());
+              }).then((res) => {
+                firstRetryAfter = res.headers.get("retry-after");
+                return res.json();
+              });
+              if (playlistFetch2?.error) {
+                setErrMsg(playlistFetch2?.error?.message);
+                if (playlistFetch2?.error?.status === 429) {
+                  setErrMsg(
+                    (e) => e + " waiting for " + firstRetryAfter + " seconds"
+                  );
+                  await sleep(firstRetryAfter * 1000);
+                  setErrMsg("");
+                  playlistFetch2.next = userPlaylists[i].tracks.href;
+                }
+              }
               if (playlistFetch2.items) {
                 playlistTracks.push(...playlistFetch2.items);
               }
               while (playlistFetch2.next) {
+                let oldFetchNext = playlistFetch2.next;
+                let retryAfter;
                 playlistFetch2 = await fetch(playlistFetch2.next, {
                   headers: {
                     Authorization: "Bearer " + accessToken,
                   },
-                }).then((res) => res.json());
+                }).then((res) => {
+                  retryAfter = res.headers.get("retry-after");
+                  return res.json();
+                });
+                if (playlistFetch2?.error) {
+                  setErrMsg(playlistFetch2?.error?.message);
+                  if (playlistFetch2?.error?.status === 429) {
+                    setErrMsg(
+                      (e) => e + " waiting for " + retryAfter + " seconds"
+                    );
+                    await sleep(retryAfter * 1000);
+                    setErrMsg("");
+                    playlistFetch2.next = oldFetchNext;
+                  }
+                }
                 if (playlistFetch2.items) {
                   playlistTracks.push(...playlistFetch2.items);
                 }
@@ -141,10 +175,6 @@ function App() {
               );
               setUserPlaylists(userPlaylists.slice(0, i + 1));
             }
-            console.log(JSON.stringify(userPlaylists).length);
-            console.log(
-              LZstring.compress(JSON.stringify(userPlaylists)).length
-            );
             localStorage.setItem(
               "userPlaylists",
               LZstring.compress(JSON.stringify(userPlaylists))
@@ -236,11 +266,15 @@ function App() {
             alt="User's spotify profile"
           ></img>
           <SearchBar search={search} />
+          {errMsg && <p className="text-red-600">{errMsg}</p>}
           {isLoadingPlaylists && (
             <p>
               Loading your playlists... {userPlaylists.length} /{" "}
               {totalPlaylists}
             </p>
+          )}
+          {!isLoadingPlaylists && (
+            <p>Loaded {userPlaylists.length} playlists</p>
           )}
 
           {searchedTerm && (
@@ -265,7 +299,7 @@ function App() {
             className="text-center p-4 border rounded-md"
             onClick={() => {
               setAccessToken("");
-              window.location.href = "";
+              window.location.href = "/";
             }}
           >
             Logout

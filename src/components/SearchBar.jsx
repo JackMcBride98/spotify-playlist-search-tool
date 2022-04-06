@@ -16,9 +16,7 @@ export default function SearchBar({ search }) {
         placeholder="Search for songs or artists"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            if (searchTerm) {
-              search(searchTerm);
-            }
+            search(searchTerm);
           }
         }}
         value={searchTerm}
@@ -27,9 +25,7 @@ export default function SearchBar({ search }) {
       <button
         className=" p-2"
         onClick={() => {
-          if (searchTerm) {
-            search(searchTerm);
-          }
+          search(searchTerm);
         }}
       >
         <SearchIcon className="w-5 h-5 fill-black bg-green-600" />

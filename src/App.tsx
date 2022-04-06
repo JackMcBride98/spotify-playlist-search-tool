@@ -94,6 +94,7 @@ function App() {
           setIsLoadingPlaylists(true);
           if (!findIt) {
             const userPlaylists = [];
+            let priorRetryAfter;
             let playlistFetch = await fetch(
               `https://api.spotify.com/v1/users/${result.id}/playlists?offset=0&limit=50`,
               {
@@ -101,15 +102,48 @@ function App() {
                   Authorization: "Bearer " + accessToken,
                 },
               }
-            ).then((res) => res.json());
-            userPlaylists.push(...playlistFetch.items);
+            ).then((res) => {
+              priorRetryAfter = res.headers.get("retry-after");
+              return res.json();
+            });
+            if (playlistFetch?.error) {
+              setErrMsg(playlistFetch?.error?.message);
+              if (playlistFetch?.error?.status === 429) {
+                setErrMsg(
+                  (e) => e + " waiting for " + priorRetryAfter + " seconds"
+                );
+                await sleep(priorRetryAfter * 1000);
+                setErrMsg("");
+                playlistFetch.next = `https://api.spotify.com/v1/users/${result.id}/playlists?offset=0&limit=50`;
+              }
+            }
+            if (playlistFetch.items) {
+              userPlaylists.push(...playlistFetch.items);
+            }
             while (playlistFetch.next) {
+              let priorRetryAfter2;
               playlistFetch = await fetch(playlistFetch.next, {
                 headers: {
                   Authorization: "Bearer " + accessToken,
                 },
-              }).then((res) => res.json());
-              userPlaylists.push(...playlistFetch.items);
+              }).then((res) => {
+                priorRetryAfter2 = res.headers.get("retry-after");
+                return res.json();
+              });
+              if (playlistFetch?.error) {
+                setErrMsg(playlistFetch?.error?.message);
+                if (playlistFetch?.error?.status === 429) {
+                  setErrMsg(
+                    (e) => e + " waiting for " + priorRetryAfter2 + " seconds"
+                  );
+                  await sleep(priorRetryAfter2 * 1000);
+                  setErrMsg("");
+                  playlistFetch.next = `https://api.spotify.com/v1/users/${result.id}/playlists?offset=0&limit=50`;
+                }
+              }
+              if (playlistFetch.items) {
+                userPlaylists.push(...playlistFetch.items);
+              }
             }
             //Cleaning up the playlists so that they fit in local storage
             userPlaylists.forEach((playlist) => {

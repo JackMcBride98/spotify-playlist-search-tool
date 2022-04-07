@@ -106,7 +106,7 @@ function App() {
             333
           );
           if (!findIt) {
-            const userPlaylists = [];
+            const userPlaylists2 = [];
             let priorRetryAfter;
             let playlistFetch = await fetch(
               `https://api.spotify.com/v1/users/${result.id}/playlists?offset=0&limit=50`,
@@ -131,7 +131,7 @@ function App() {
               }
             }
             if (playlistFetch.items) {
-              userPlaylists.push(...playlistFetch.items);
+              userPlaylists2.push(...playlistFetch.items);
             }
             while (playlistFetch.next) {
               let priorRetryAfter2;
@@ -155,11 +155,11 @@ function App() {
                 }
               }
               if (playlistFetch.items) {
-                userPlaylists.push(...playlistFetch.items);
+                userPlaylists2.push(...playlistFetch.items);
               }
             }
             //Cleaning up the playlists so that they fit in local storage
-            userPlaylists.forEach((playlist) => {
+            userPlaylists2.forEach((playlist) => {
               delete playlist.collaborative;
               delete playlist.href;
               delete playlist.primary_color;
@@ -173,11 +173,11 @@ function App() {
               delete playlist.owner.type;
               delete playlist.owner.uri;
             });
-            setTotalPlaylists(userPlaylists.length);
-            for (let i = 0; i < userPlaylists.length; i++) {
+            setTotalPlaylists(userPlaylists2.length);
+            for (let i = 0; i < userPlaylists2.length; i++) {
               let playlistTracks = [];
               let firstRetryAfter;
-              let playlistFetch2 = await fetch(userPlaylists[i].tracks.href, {
+              let playlistFetch2 = await fetch(userPlaylists2[i].tracks.href, {
                 headers: {
                   Authorization: "Bearer " + accessToken,
                 },
@@ -193,7 +193,7 @@ function App() {
                   );
                   await sleep(firstRetryAfter * 1000);
                   setErrMsg("");
-                  playlistFetch2.next = userPlaylists[i].tracks.href;
+                  playlistFetch2.next = userPlaylists2[i].tracks.href;
                 }
               }
               if (playlistFetch2.items) {
@@ -225,16 +225,20 @@ function App() {
                   playlistTracks.push(...playlistFetch2.items);
                 }
               }
-              userPlaylists[i].tracks = playlistTracks.map((info) =>
+              userPlaylists2[i].tracks = playlistTracks.map((info) =>
                 _.pick(info.track, ["name", "artists", "id"])
               );
-              setUserPlaylists(userPlaylists.slice(0, i + 1));
+              setUserPlaylists(userPlaylists2.slice(0, i + 1));
             }
             localStorage.setItem(
               "userPlaylists",
               LZstring.compress(
                 JSON.stringify([
-                  { userID: result.id, playlists: userPlaylists },
+                  {
+                    userID: result.id,
+                    playlists: userPlaylists2,
+                    time: Date.now(),
+                  },
                   ...(uncompressed ? uncompressed : []),
                 ])
               )
@@ -245,10 +249,189 @@ function App() {
           } else {
             setUserPlaylists(findIt.playlists);
             setTotalPlaylists(findIt.playlists.length);
-            timer = setTimeout(() => {
-              setIsLoadingPlaylists(false);
-              clearInterval(dotsInterval);
-            }, 1500);
+            setIsLoadingPlaylists(false);
+            clearInterval(dotsInterval);
+            const oneHourInMs = 3600000;
+            if (Date.now() - findIt.time > oneHourInMs) {
+              const userPlaylists2 = [];
+              let priorRetryAfter;
+              let playlistFetch = await fetch(
+                `https://api.spotify.com/v1/users/${result.id}/playlists?offset=0&limit=50`,
+                {
+                  headers: {
+                    Authorization: "Bearer " + accessToken,
+                  },
+                }
+              ).then((res) => {
+                priorRetryAfter = res.headers.get("retry-after");
+                return res.json();
+              });
+              if (playlistFetch?.error) {
+                setErrMsg(playlistFetch?.error?.message);
+                if (playlistFetch?.error?.status === 429) {
+                  setErrMsg(
+                    (e) => e + " waiting for " + priorRetryAfter + " seconds"
+                  );
+                  await sleep(priorRetryAfter * 1000);
+                  setErrMsg("");
+                  playlistFetch.next = `https://api.spotify.com/v1/users/${result.id}/playlists?offset=0&limit=50`;
+                }
+              }
+              if (playlistFetch.items) {
+                userPlaylists2.push(...playlistFetch.items);
+              }
+              while (playlistFetch.next) {
+                let priorRetryAfter2;
+                playlistFetch = await fetch(playlistFetch.next, {
+                  headers: {
+                    Authorization: "Bearer " + accessToken,
+                  },
+                }).then((res) => {
+                  priorRetryAfter2 = res.headers.get("retry-after");
+                  return res.json();
+                });
+                if (playlistFetch?.error) {
+                  setErrMsg(playlistFetch?.error?.message);
+                  if (playlistFetch?.error?.status === 429) {
+                    setErrMsg(
+                      (e) => e + " waiting for " + priorRetryAfter2 + " seconds"
+                    );
+                    await sleep(priorRetryAfter2 * 1000);
+                    setErrMsg("");
+                    playlistFetch.next = `https://api.spotify.com/v1/users/${result.id}/playlists?offset=0&limit=50`;
+                  }
+                }
+                if (playlistFetch.items) {
+                  userPlaylists2.push(...playlistFetch.items);
+                }
+              }
+              //* Cleaning up the playlists so that they fit in local storage
+              userPlaylists2.forEach((playlist) => {
+                delete playlist.collaborative;
+                delete playlist.href;
+                delete playlist.primary_color;
+                delete playlist.public;
+                delete playlist.snapshot_id;
+                delete playlist.type;
+                delete playlist.uri;
+                delete playlist.owner.external_urls;
+                delete playlist.owner.href;
+                delete playlist.owner.id;
+                delete playlist.owner.type;
+                delete playlist.owner.uri;
+              });
+              setTotalPlaylists(userPlaylists2.length);
+              for (let i = 0; i < userPlaylists2.length; i++) {
+                let playlistTracks = [];
+                let firstRetryAfter;
+                let playlistFetch2 = await fetch(
+                  userPlaylists2[i].tracks.href,
+                  {
+                    headers: {
+                      Authorization: "Bearer " + accessToken,
+                    },
+                  }
+                ).then((res) => {
+                  firstRetryAfter = res.headers.get("retry-after");
+                  return res.json();
+                });
+                if (playlistFetch2?.error) {
+                  setErrMsg(playlistFetch2?.error?.message);
+                  if (playlistFetch2?.error?.status === 429) {
+                    setErrMsg(
+                      (e) => e + " waiting for " + firstRetryAfter + " seconds"
+                    );
+                    await sleep(firstRetryAfter * 1000);
+                    setErrMsg("");
+                    playlistFetch2.next = userPlaylists2[i].tracks.href;
+                  }
+                }
+                if (playlistFetch2.items) {
+                  playlistTracks.push(...playlistFetch2.items);
+                }
+                while (playlistFetch2.next) {
+                  let oldFetchNext = playlistFetch2.next;
+                  let retryAfter;
+                  playlistFetch2 = await fetch(playlistFetch2.next, {
+                    headers: {
+                      Authorization: "Bearer " + accessToken,
+                    },
+                  }).then((res) => {
+                    retryAfter = res.headers.get("retry-after");
+                    return res.json();
+                  });
+                  if (playlistFetch2?.error) {
+                    setErrMsg(playlistFetch2?.error?.message);
+                    if (playlistFetch2?.error?.status === 429) {
+                      setErrMsg(
+                        (e) => e + " waiting for " + retryAfter + " seconds"
+                      );
+                      await sleep(retryAfter * 1000);
+                      setErrMsg("");
+                      playlistFetch2.next = oldFetchNext;
+                    }
+                  }
+                  if (playlistFetch2.items) {
+                    playlistTracks.push(...playlistFetch2.items);
+                  }
+                }
+                userPlaylists2[i].tracks = playlistTracks.map((info) =>
+                  _.pick(info.track, ["name", "artists", "id"])
+                );
+
+                let theOne = findIt.playlists.find(
+                  (el) => el.id === userPlaylists2[i].id
+                );
+                if (theOne) {
+                  //* current playlist - replace in there
+                  let index = findIt.playlists.indexOf(theOne);
+                  let newPlaylists = [
+                    ...findIt.playlists.slice(0, index),
+                    userPlaylists2[i],
+                    ...findIt.playlists.slice(
+                      index + 1,
+                      findIt.playlists.length
+                    ),
+                  ];
+                  setUserPlaylists(newPlaylists);
+                  findIt.playlists = newPlaylists;
+                } else {
+                  //* new playlist, add to start of array
+                  setUserPlaylists([userPlaylists2[i], ...findIt.playlists]);
+                  findIt.playlists = [userPlaylists2[i], ...findIt.playlists];
+                }
+                if (i === 25) {
+                  //* save the first 25 playlists to localstorage for the cases where the user isnt on the site for very long
+                  localStorage.setItem(
+                    "userPlaylists",
+                    LZstring.compress(
+                      JSON.stringify([
+                        {
+                          userID: result.id,
+                          playlists: findIt.playlists,
+                          time: Date.now(),
+                        },
+                        ...(uncompressed ? uncompressed : []),
+                      ])
+                    )
+                  );
+                }
+              }
+              setUserPlaylists(userPlaylists2);
+              localStorage.setItem(
+                "userPlaylists",
+                LZstring.compress(
+                  JSON.stringify([
+                    {
+                      userID: result.id,
+                      playlists: userPlaylists2,
+                      time: Date.now(),
+                    },
+                    ...(uncompressed ? uncompressed : []),
+                  ])
+                )
+              );
+            }
           }
         };
         fetchUserInfo();
@@ -264,8 +447,9 @@ function App() {
 
   const login = (e) => {
     e.preventDefault();
-    const client_id = "09741050c3a14a3e8e53ecd9b981c185";
-    const redirect_uri = "http://localhost:3000";
+    const client_id = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
+    const redirect_uri =
+      process.env.REACT_APP_VERCEL_URL || "https://" + process.env.VERCEL_URL;
 
     const state = v4().replace(/-/g, "").slice(0, 16);
 
@@ -353,7 +537,6 @@ function App() {
               playlists
             </p>
           )}
-          {console.log(showScrollToTop)}
           {searchResults.length > 0 && (
             <motion.button
               onClick={() =>

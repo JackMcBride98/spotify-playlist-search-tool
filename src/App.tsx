@@ -447,8 +447,9 @@ function App() {
 
   const login = (e) => {
     e.preventDefault();
-    const client_id = "09741050c3a14a3e8e53ecd9b981c185";
-    const redirect_uri = "http://localhost:3000";
+    const client_id = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
+    const redirect_uri =
+      process.env.REACT_APP_VERCEL_URL || "https://" + process.env.VERCEL_URL;
 
     const state = v4().replace(/-/g, "").slice(0, 16);
 

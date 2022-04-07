@@ -248,13 +248,11 @@ function App() {
             clearInterval(dotsInterval);
           } else {
             setUserPlaylists(findIt.playlists);
-            console.log(findIt.playlists);
             setTotalPlaylists(findIt.playlists.length);
             setIsLoadingPlaylists(false);
             clearInterval(dotsInterval);
             const oneHourInMs = 3600000;
             if (Date.now() - findIt.time > oneHourInMs) {
-              console.log("refetching in the background");
               const userPlaylists2 = [];
               let priorRetryAfter;
               let playlistFetch = await fetch(
@@ -307,7 +305,7 @@ function App() {
                   userPlaylists2.push(...playlistFetch.items);
                 }
               }
-              //Cleaning up the playlists so that they fit in local storage
+              //* Cleaning up the playlists so that they fit in local storage
               userPlaylists2.forEach((playlist) => {
                 delete playlist.collaborative;
                 delete playlist.href;
@@ -402,6 +400,22 @@ function App() {
                   setUserPlaylists([userPlaylists2[i], ...findIt.playlists]);
                   findIt.playlists = [userPlaylists2[i], ...findIt.playlists];
                 }
+                if (i === 25) {
+                  //* save the first 25 playlists to localstorage for the cases where the user isnt on the site for very long
+                  localStorage.setItem(
+                    "userPlaylists",
+                    LZstring.compress(
+                      JSON.stringify([
+                        {
+                          userID: result.id,
+                          playlists: findIt.playlists,
+                          time: Date.now(),
+                        },
+                        ...(uncompressed ? uncompressed : []),
+                      ])
+                    )
+                  );
+                }
               }
               setUserPlaylists(userPlaylists2);
               localStorage.setItem(
@@ -417,8 +431,6 @@ function App() {
                   ])
                 )
               );
-            } else {
-              console.log("not refetching as within 1 hour");
             }
           }
         };

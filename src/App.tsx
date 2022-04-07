@@ -450,7 +450,7 @@ function App() {
     const client_id = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
     const redirect_uri =
       process.env.REACT_APP_VERCEL_URL || "https://" + process.env.VERCEL_URL;
-
+    console.log(redirect_uri);
     const state = v4().replace(/-/g, "").slice(0, 16);
 
     localStorage.setItem("spotifyAuthState", state);

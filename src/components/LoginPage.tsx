@@ -133,7 +133,20 @@ export default function LoginPage({ login }) {
         className="ml-16 text-center text-black p-4 rounded-md cursor-default"
         onClick={() => {
           setShowSecretSVG(!showSecretSVG);
-          setTimeout(() => setShowSecretSVG(false), 3000);
+          setTimeout(
+            () =>
+              document.scrollingElement.scrollIntoView({
+                behavior: "smooth",
+                block: "end",
+                inline: "nearest",
+              }),
+            10
+          );
+
+          setTimeout(() => {
+            setShowSecretSVG(false);
+            document.scrollingElement.scrollIntoView();
+          }, 3000);
         }}
       >
         Secret

@@ -6,7 +6,7 @@ import LoginPage from "./components/LoginPage";
 import _ from "lodash";
 import LZstring from "lz-string";
 import SearchBar from "./components/SearchBar";
-
+import { Virtuoso } from "react-virtuoso";
 interface Params {
   access_token?: string;
   token_type?: string;
@@ -500,86 +500,115 @@ function App() {
 
   return (
     <div className="app flex flex-col items-center space-y-4 text-white w-full pb-4 relative h-full overflow-hidden">
-      <h1 className=" text-center text-xl lg:text-3xl font-semibold">
-        Spotify Playlist Search Tool
-      </h1>
       {accessToken ? (
         <>
-          <p>Hello {userProfile?.display_name.split(" ")[0]}</p>
-          <img
-            className="rounded-full"
-            src={userProfile?.images[0]?.url}
-            width={150}
-            height={150}
-            alt="User's spotify profile"
-          ></img>
-          <SearchBar search={search} />
-          {errMsg && <p className="text-red-600">{errMsg}</p>}
-          {isLoadingPlaylists && (
-            <p>
-              Loading your playlists
-              <span className="w-2 inline-block">{dots}</span>{" "}
-              {userPlaylists.length} / {totalPlaylists} <br />
-              <span className="text-xs -mt-1">
-                (You can search just the loaded ones)
-              </span>
-            </p>
-          )}
-          {!isLoadingPlaylists && (
-            <p>Loaded {userPlaylists.length} playlists</p>
-          )}
+          <Virtuoso
+            style={{ height: "100%" }}
+            className=" w-full h-full flex items-center"
+            totalCount={searchResults.length}
+            useWindowScroll={true}
+            overscan={20}
+            components={{
+              Header: () => (
+                <div className="flex flex-col space-y-4 items-center">
+                  <h1 className=" text-center text-xl lg:text-3xl font-semibold">
+                    Spotify Playlist Search Tool
+                  </h1>
+                  <p>Hello {userProfile?.display_name.split(" ")[0]}</p>
+                  <img
+                    className="rounded-full"
+                    src={userProfile?.images[0]?.url}
+                    width={150}
+                    height={150}
+                    alt="User's spotify profile"
+                  ></img>
+                  <SearchBar search={search} />
+                  {searchResults.length > 0 && (
+                    <motion.button
+                      onClick={() =>
+                        document.scrollingElement.scrollIntoView({
+                          behavior: "smooth",
+                        })
+                      }
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className={
+                        "rounded-full text-black text-xl bg-green-600 w-12 h-12 md:w-20 md:h-20  text-center fixed transition-all bottom-2 md:bottom-4 right-2 md:right-28 opacity-80 hover:opacity-100 focus:opacity-100 " +
+                        (!showScrollToTop && "-bottom-24 md:-bottom-24")
+                      }
+                    >
+                      <svg
+                        className={"w-12 h-12 md:w-20 md:h-20"}
+                        viewBox="0 0 100 100"
+                      >
+                        <polygon
+                          points="47,75 47,50 38,50 50,28 62,50 53,50 53,75"
+                          fill="black"
+                          stroke="black"
+                        />
+                      </svg>
+                    </motion.button>
+                  )}
+                  {errMsg && <p className="text-red-600">{errMsg}</p>}
+                  {isLoadingPlaylists && (
+                    <p>
+                      Loading your playlists
+                      <span className="w-2 inline-block">{dots}</span>{" "}
+                      {userPlaylists.length} / {totalPlaylists} <br />
+                      <span className="text-xs -mt-1">
+                        (You can search just the loaded ones)
+                      </span>
+                    </p>
+                  )}
+                  {!isLoadingPlaylists && (
+                    <p>Loaded {userPlaylists.length} playlists</p>
+                  )}
 
-          {searchedTerm && (
-            <p>
-              {searchResults.length} matching out of {totalPlaylists} total
-              playlists
-            </p>
-          )}
-          {searchResults.length > 0 && (
-            <motion.button
-              onClick={() =>
-                document.scrollingElement.scrollIntoView({ behavior: "smooth" })
-              }
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className={
-                "rounded-full text-black text-xl bg-green-600 w-12 h-12 md:w-20 md:h-20  text-center fixed transition-all bottom-2 md:bottom-4 right-2 md:right-28 opacity-80 hover:opacity-100 focus:opacity-100 " +
-                (!showScrollToTop && "-bottom-24 md:-bottom-24")
-              }
-            >
-              <svg
-                className={"w-12 h-12 md:w-20 md:h-20"}
-                viewBox="0 0 100 100"
-              >
-                <polygon
-                  points="47,75 47,50 38,50 50,28 62,50 53,50 53,75"
-                  fill="black"
-                  stroke="black"
+                  {searchedTerm && (
+                    <p>
+                      {searchResults.length} matching out of {totalPlaylists}{" "}
+                      total playlists
+                    </p>
+                  )}
+                  {searchedTerm && searchResults.length === 0 && (
+                    <p>No results found</p>
+                  )}
+                </div>
+              ),
+              Footer: () => (
+                <div className="flex flex-col space-y-4 items-center mt-4">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="text-center p-4 border rounded-md"
+                    onClick={() => {
+                      setAccessToken("");
+                      window.location.href = "/";
+                    }}
+                  >
+                    Logout
+                  </motion.button>
+                </div>
+              ),
+            }}
+            itemContent={(index) => {
+              return (
+                <Playlist
+                  playlist={searchResults[index]}
+                  searchedTerm={searchedTerm}
+                  key={searchResults[index]?.id || index}
                 />
-              </svg>
-            </motion.button>
-          )}
-          {searchResults.map((result, index) => (
+              );
+            }}
+          ></Virtuoso>
+
+          {/* {searchResults.map((result, index) => (
             <Playlist
               playlist={result}
               searchedTerm={searchedTerm}
               key={result?.id || index}
             />
-          ))}
-          {searchedTerm && searchResults.length === 0 && (
-            <p>No results found</p>
-          )}
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className="text-center p-4 border rounded-md"
-            onClick={() => {
-              setAccessToken("");
-              window.location.href = "/";
-            }}
-          >
-            Logout
-          </motion.button>
+          ))} */}
         </>
       ) : (
         <LoginPage login={login} />

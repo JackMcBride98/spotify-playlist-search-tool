@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Virtuoso } from "react-virtuoso";
 
 export default function Playlist({ playlist, searchedTerm }) {
+  const [firstMatchIndex, setFirstMatchIndex] = useState(null);
   const ref = useRef(null);
   useEffect(() => {
     if (ref.current) {
@@ -12,18 +13,20 @@ export default function Playlist({ playlist, searchedTerm }) {
             artist?.name?.toUpperCase().includes(searchedTerm.toUpperCase())
           )
       );
+      let index = playlist?.tracks?.indexOf(firstMatch);
       let timer1 = setTimeout(() => {
         ref.current.scrollToIndex({
-          index: playlist?.tracks?.indexOf(firstMatch),
-          behavior: "smooth",
+          index: index,
+          behavior: firstMatchIndex === null ? "smooth" : "auto",
         });
-      }, 50);
+        setFirstMatchIndex(index);
+      }, 300);
       return () => clearTimeout(timer1);
     }
-  }, [searchedTerm, playlist.tracks]);
+  }, [searchedTerm, playlist.tracks, firstMatchIndex]);
 
   return (
-    <div className="m-2 p-2 md:w-full md: max-w-md justify-start w-72 border-gray-600 border-2 rounded-md">
+    <div className="m-2 p-2 md:w-full md:max-w-md justify-start w-72 border-gray-600 border-2 rounded-md mx-auto">
       <div className="flex space-x-4">
         <img
           className="h-20 w-20"

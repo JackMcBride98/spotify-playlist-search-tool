@@ -16,6 +16,9 @@ export default function LoginPage({ login }) {
 
   return (
     <>
+      <h1 className=" text-center text-xl lg:text-3xl font-semibold">
+        Spotify Playlist Search Tool
+      </h1>
       <svg className="w-72 h-72" viewBox="0 0 100 100">
         <circle
           className="fill-green-600"

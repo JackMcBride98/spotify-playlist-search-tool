@@ -1,13 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { Virtuoso } from "react-virtuoso";
 
 export default function Playlist({ playlist, searchedTerm }) {
   const ref = useRef(null);
-  const firstMatchRef = useRef(null);
-  const [firstMatchIndex, setFirstMatchIndex] = useState(null);
   useEffect(() => {
     if (ref.current) {
-      ref.current.scrollBehaviour = "auto";
-      ref.current.scrollTop = 0;
       const firstMatch = playlist?.tracks?.find(
         (track) =>
           track?.name?.toUpperCase().includes(searchedTerm.toUpperCase()) ||
@@ -15,12 +12,12 @@ export default function Playlist({ playlist, searchedTerm }) {
             artist?.name?.toUpperCase().includes(searchedTerm.toUpperCase())
           )
       );
-      setFirstMatchIndex(playlist?.tracks?.indexOf(firstMatch));
       let timer1 = setTimeout(() => {
-        ref.current.scrollBehaviour = "smooth";
-        ref.current.scrollTop =
-          firstMatchRef.current.offsetTop - ref.current.offsetTop;
-      }, 500);
+        ref.current.scrollToIndex({
+          index: playlist?.tracks?.indexOf(firstMatch),
+          behavior: "smooth",
+        });
+      }, 50);
       return () => clearTimeout(timer1);
     }
   }, [searchedTerm, playlist.tracks]);
@@ -54,12 +51,12 @@ export default function Playlist({ playlist, searchedTerm }) {
           ></p>
         </div>
       </div>
-      <div
-        className="flex flex-col overflow-y-auto h-64 md:h-80"
+      <Virtuoso
         ref={ref}
-        style={{ scrollBehavior: "smooth" }}
-      >
-        {playlist.tracks.map((track, index) => {
+        style={{ height: "400px" }}
+        totalCount={playlist.tracks.length}
+        itemContent={(index) => {
+          const track = playlist.tracks[index];
           const isMatch =
             track?.name?.toUpperCase().includes(searchedTerm.toUpperCase()) ||
             track?.artists?.some((artist) =>
@@ -74,7 +71,6 @@ export default function Playlist({ playlist, searchedTerm }) {
                   : "")
               }
               key={track.id + index.toString()}
-              ref={index === firstMatchIndex ? firstMatchRef : null}
             >
               <span className="text-gray-200 font-light mr-2">{index + 1}</span>{" "}
               {track?.name} -{" "}
@@ -83,8 +79,8 @@ export default function Playlist({ playlist, searchedTerm }) {
               </span>
             </p>
           );
-        })}
-      </div>
+        }}
+      />
     </div>
   );
 }

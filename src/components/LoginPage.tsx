@@ -16,6 +16,9 @@ export default function LoginPage({ login }) {
 
   return (
     <>
+      <h1 className=" text-center text-xl lg:text-3xl font-semibold">
+        Spotify Playlist Search Tool
+      </h1>
       <svg className="w-72 h-72" viewBox="0 0 100 100">
         <circle
           className="fill-green-600"
@@ -133,7 +136,20 @@ export default function LoginPage({ login }) {
         className="ml-16 text-center text-black p-4 rounded-md cursor-default"
         onClick={() => {
           setShowSecretSVG(!showSecretSVG);
-          setTimeout(() => setShowSecretSVG(false), 3000);
+          setTimeout(
+            () =>
+              document.scrollingElement.scrollIntoView({
+                behavior: "smooth",
+                block: "end",
+                inline: "nearest",
+              }),
+            10
+          );
+
+          setTimeout(() => {
+            setShowSecretSVG(false);
+            document.scrollingElement.scrollIntoView();
+          }, 3000);
         }}
       >
         Secret

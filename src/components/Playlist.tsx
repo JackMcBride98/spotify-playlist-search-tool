@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Virtuoso } from "react-virtuoso";
 
 export default function Playlist({ playlist, searchedTerm }) {
-  const [firstMatchIndex, setFirstMatchIndex] = useState(null);
   const ref = useRef(null);
   useEffect(() => {
     if (ref.current) {
@@ -17,13 +16,12 @@ export default function Playlist({ playlist, searchedTerm }) {
       let timer1 = setTimeout(() => {
         ref.current.scrollToIndex({
           index: index,
-          behavior: firstMatchIndex === null ? "smooth" : "auto",
+          behavior: "smooth",
         });
-        setFirstMatchIndex(index);
       }, 300);
       return () => clearTimeout(timer1);
     }
-  }, [searchedTerm, playlist.tracks, firstMatchIndex]);
+  }, [searchedTerm, playlist.tracks]);
 
   return (
     <div className="m-2 p-2 md:w-full md:max-w-md justify-start w-72 border-gray-600 border-2 rounded-md mx-auto">

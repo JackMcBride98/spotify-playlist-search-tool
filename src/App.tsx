@@ -464,6 +464,7 @@ function App() {
 
     window.location.href = url;
   };
+
   const search = (searchTerm) => {
     setSearchResults([]);
     setSearchedTerm(searchTerm);

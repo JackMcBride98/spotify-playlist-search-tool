@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-export default function LoginPage({ login }) {
+export default function LoginPage({ login, errMsg }) {
   const [showSecretSVG, setShowSecretSVG] = useState(false);
   const [logoClicked, setLogoClicked] = useState(false);
 
@@ -132,6 +132,7 @@ export default function LoginPage({ login }) {
         </svg>
         <p>Login with Spotify</p>
       </motion.button>
+      {errMsg && <p className="text-red-600">{errMsg}</p>}
       <button
         className="ml-16 text-center text-black p-4 rounded-md cursor-default"
         onClick={() => {

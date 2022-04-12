@@ -1,12 +1,12 @@
 import { v4 } from "uuid";
 import { useEffect, useState } from "react";
 import Playlist from "./components/Playlist";
-import { motion } from "framer-motion";
 import LoginPage from "./components/LoginPage";
 import _ from "lodash";
 import LZstring from "lz-string";
 import { Virtuoso } from "react-virtuoso";
 import Header from "./components/Header";
+import Footer from "./components/Footer";
 interface Params {
   access_token?: string;
   token_type?: string;
@@ -28,6 +28,7 @@ interface UserProfile {
   product: string;
   type: string;
   uri: string;
+  error?: any;
 }
 
 //TODO: implement typing of playlists and tracks
@@ -89,6 +90,10 @@ function App() {
               },
             }
           ).then((res) => res.json());
+          if (result?.error) {
+            setErrMsg("You are forbidden access to the app");
+            return;
+          }
           setUserProfile(result);
           setAccessToken(accessToken);
           const storedUserPlaylists = localStorage.getItem("userPlaylists");
@@ -519,24 +524,11 @@ function App() {
               totalPlaylists,
               dots,
               searchedTerm,
+              setAccessToken,
             }}
             components={{
               Header,
-              Footer: () => (
-                <div className="flex flex-col space-y-4 items-center mt-4">
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="text-center p-4 border rounded-md"
-                    onClick={() => {
-                      setAccessToken("");
-                      window.location.href = "/";
-                    }}
-                  >
-                    Logout
-                  </motion.button>
-                </div>
-              ),
+              Footer,
             }}
             itemContent={(index) => {
               return (
@@ -550,7 +542,7 @@ function App() {
           ></Virtuoso>
         </>
       ) : (
-        <LoginPage login={login} />
+        <LoginPage login={login} errMsg={errMsg} />
       )}
     </div>
   );

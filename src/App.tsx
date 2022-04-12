@@ -14,7 +14,6 @@ interface Params {
   state: string;
   error?: string;
 }
-
 interface UserProfile {
   country: string;
   display_name: string;
@@ -30,10 +29,6 @@ interface UserProfile {
   uri: string;
   error?: any;
 }
-
-//TODO: implement typing of playlists and tracks
-
-//TODO: error handling
 
 function getHashParams(): Params {
   let hashParams: Params = { state: null };

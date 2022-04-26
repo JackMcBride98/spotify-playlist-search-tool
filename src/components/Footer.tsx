@@ -6,7 +6,7 @@ export default function Footer({ context }) {
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
-        className="text-center p-4 border rounded-md"
+        className="text-center p-4 border rounded-md mb-8"
         onClick={() => {
           context.setAccessToken("");
           window.location.href = "/";

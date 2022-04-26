@@ -98,6 +98,18 @@ export default function LoginPage({ login, errMsg }) {
           strokeWidth="7"
         />
       </svg>
+      <p className="w-80 pb-5">
+        A tool for finding out which of your saved or made playlists contain a
+        given artist or song. The app is currently in development mode, meaning
+        that the creator will have to allow you access to the app. If you would
+        like that send me your spotify account email address and your name to{" "}
+        <a
+          href="mailto:mcbride.jack1@gmail.com"
+          className="underline text-green-300 hover:italic hover:text-green-400"
+        >
+          mcbride.jack1@gmail.com
+        </a>
+      </p>
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}

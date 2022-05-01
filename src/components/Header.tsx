@@ -18,11 +18,7 @@ export default function Header({ context }) {
       <SearchBar search={context.search} />
       {context.searchResults.length > 0 && (
         <motion.button
-          onClick={() =>
-            document.scrollingElement.scrollIntoView({
-              behavior: "smooth",
-            })
-          }
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           className={

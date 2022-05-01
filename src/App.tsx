@@ -55,6 +55,7 @@ function App() {
   const [dots, setDots] = useState("");
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [loadingLogin, setLoadingLogin] = useState(false);
+  const [maxScrollDistance, setMaxScrollDistance] = useState(0);
 
   const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -68,6 +69,9 @@ function App() {
     const storedState = localStorage.getItem("spotifyAuthState");
     let timer;
     document.addEventListener("scroll", function () {
+      if (document.scrollingElement.scrollTop > maxScrollDistance) {
+        setMaxScrollDistance(document.scrollingElement.scrollTop);
+      }
       if (document.scrollingElement.scrollTop > 500) {
         setShowScrollToTop(true);
       } else {
@@ -474,6 +478,7 @@ function App() {
   };
 
   const search = (searchTerm) => {
+    setMaxScrollDistance(0);
     setSearchResults([]);
     setSearchedTerm(searchTerm);
     if (!searchTerm) {
@@ -541,6 +546,7 @@ function App() {
                   playlist={searchResults[index]}
                   searchedTerm={searchedTerm}
                   key={searchResults[index]?.id || index}
+                  maxScrollDistance={maxScrollDistance}
                 />
               );
             }}

@@ -56,6 +56,7 @@ function App() {
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [loadingLogin, setLoadingLogin] = useState(false);
   const [maxScrollDistance, setMaxScrollDistance] = useState(0);
+  const [showOwnPlaylists, setShowOwnPlaylists] = useState(false);
 
   const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -477,7 +478,7 @@ function App() {
     window.location.href = url;
   };
 
-  const search = (searchTerm) => {
+  const search = (searchTerm, showOwn) => {
     setMaxScrollDistance(0);
     setSearchResults([]);
     setSearchedTerm(searchTerm);
@@ -509,7 +510,13 @@ function App() {
         }
       }
     });
-    setSearchResults(results);
+    let filteredResults;
+    if (showOwn) {
+      filteredResults = results.filter(
+        (playlist) => playlist.owner.display_name === userProfile.display_name
+      );
+    }
+    setSearchResults(filteredResults ? filteredResults : results);
   };
 
   return (
@@ -535,6 +542,8 @@ function App() {
               searchedTerm,
               setAccessToken,
               setLoadingLogin,
+              showOwnPlaylists,
+              setShowOwnPlaylists,
             }}
             components={{
               Header,

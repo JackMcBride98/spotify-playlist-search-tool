@@ -8,6 +8,7 @@ export default function Footer({ context }) {
         whileTap={{ scale: 0.9 }}
         className="text-center p-4 border rounded-md mb-8"
         onClick={() => {
+          context.setLoadingLogin(false);
           context.setAccessToken("");
           window.location.href = "/";
         }}

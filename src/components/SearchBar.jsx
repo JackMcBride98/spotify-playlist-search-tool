@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { ReactComponent as SearchIcon } from "../images/search.svg";
 
-export default function SearchBar({ search }) {
+export default function SearchBar({ search, showOwn }) {
   const [searchTerm, setSearchTerm] = useState("");
 
   return (
@@ -16,7 +16,7 @@ export default function SearchBar({ search }) {
         placeholder="Search for songs or artists"
         onKeyDown={(e) => {
           if (e.key === "Enter") {
-            search(searchTerm);
+            search(searchTerm, showOwn);
           }
         }}
         value={searchTerm}
@@ -25,7 +25,7 @@ export default function SearchBar({ search }) {
       <button
         className=" p-2"
         onClick={() => {
-          search(searchTerm);
+          search(searchTerm, showOwn);
         }}
       >
         <SearchIcon className="w-5 h-5 fill-black bg-green-600" />

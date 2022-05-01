@@ -1,11 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Virtuoso } from "react-virtuoso";
 
-export default function Playlist({ playlist, searchedTerm }) {
+export default function Playlist({
+  playlist,
+  searchedTerm,
+  maxScrollDistance,
+}) {
   const ref = useRef(null);
-  const [viewed, setViewed] = useState(false);
+  const ref2 = useRef(null);
   useEffect(() => {
-    if (ref.current) {
+    if (ref.current && ref2.current) {
       const firstMatch = playlist?.tracks?.find(
         (track) =>
           track?.name?.toUpperCase().includes(searchedTerm.toUpperCase()) ||
@@ -15,22 +19,29 @@ export default function Playlist({ playlist, searchedTerm }) {
       );
       let index = playlist?.tracks?.indexOf(firstMatch);
       let timer1;
-      console.log(viewed);
-      if (!viewed) {
+      if (maxScrollDistance < ref2.current.offsetTop) {
         timer1 = setTimeout(() => {
           ref.current.scrollToIndex({
             index: index,
             behavior: "smooth",
           });
-          setViewed(true);
         }, 300);
+      } else {
+        ref.current.scrollToIndex({
+          index: index,
+          behavior: "auto",
+        });
       }
+
       return () => clearTimeout(timer1);
     }
-  }, [searchedTerm, playlist.tracks]);
+  }, [searchedTerm, playlist.tracks]); //eslint-disable-line
 
   return (
-    <div className="m-2 my-6 md:my-8 p-2 md:w-full md:max-w-md justify-start w-72 border-gray-600 border-2 rounded-md mx-auto">
+    <div
+      ref={ref2}
+      className="m-2 my-6 md:my-8 p-2 md:w-full md:max-w-md justify-start w-72 border-gray-600 border-2 rounded-md mx-auto"
+    >
       <div className="flex space-x-4">
         <img
           className="h-20 w-20"

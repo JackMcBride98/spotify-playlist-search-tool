@@ -15,14 +15,10 @@ export default function Header({ context }) {
         height={150}
         alt="User's spotify profile"
       ></img>
-      <SearchBar search={context.search} />
+      <SearchBar search={context.search} showOwn={context.showOwnPlaylists} />
       {context.searchResults.length > 0 && (
         <motion.button
-          onClick={() =>
-            document.scrollingElement.scrollIntoView({
-              behavior: "smooth",
-            })
-          }
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           className={
@@ -40,6 +36,18 @@ export default function Header({ context }) {
         </motion.button>
       )}
       {context.errMsg && <p className="text-red-600">{context.errMsg}</p>}
+      <label className="flex items-center">
+        Show only your made playlists
+        <input
+          type="checkbox"
+          className="accent-green-600 w-4 h-4 ml-2"
+          value={context.showOwnPlaylists}
+          onChange={(e) => {
+            context.setShowOwnPlaylists(!context.showOwnPlaylists);
+            context.search(context.searchedTerm, !context.showOwnPlaylists);
+          }}
+        />
+      </label>
       {context.isLoadingPlaylists && (
         <p>
           Loading your playlists

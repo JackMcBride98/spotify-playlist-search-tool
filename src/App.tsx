@@ -54,16 +54,25 @@ function App() {
   const [errMsg, setErrMsg] = useState("");
   const [dots, setDots] = useState("");
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [loadingLogin, setLoadingLogin] = useState(false);
+  const [maxScrollDistance, setMaxScrollDistance] = useState(0);
+  const [showOwnPlaylists, setShowOwnPlaylists] = useState(false);
 
   const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
   useEffect(() => {
     const params = getHashParams();
     const accessToken = params.access_token;
+    if (accessToken) {
+      setLoadingLogin(true);
+    }
     const state = params.state;
     const storedState = localStorage.getItem("spotifyAuthState");
     let timer;
     document.addEventListener("scroll", function () {
+      if (document.scrollingElement.scrollTop > maxScrollDistance) {
+        setMaxScrollDistance(document.scrollingElement.scrollTop);
+      }
       if (document.scrollingElement.scrollTop > 500) {
         setShowScrollToTop(true);
       } else {
@@ -73,6 +82,7 @@ function App() {
 
     if (accessToken && (state == null || state !== storedState)) {
       setAccessToken("");
+      setLoadingLogin(false);
     } else {
       localStorage.removeItem("spotifyAuthState");
       if (accessToken) {
@@ -86,11 +96,13 @@ function App() {
             }
           ).then((res) => res.json());
           if (result?.error) {
+            setLoadingLogin(false);
             setErrMsg("You are forbidden access to the app");
             return;
           }
           setUserProfile(result);
           setAccessToken(accessToken);
+          setLoadingLogin(false);
           const storedUserPlaylists = localStorage.getItem("userPlaylists");
           let findIt;
           let uncompressed;
@@ -443,9 +455,10 @@ function App() {
     return () => {
       clearTimeout(timer);
     };
-  }, []);
+  }, []); //eslint-disable-line
 
   const login = (e) => {
+    setLoadingLogin(true);
     e.preventDefault();
     const client_id = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
     const redirect_uri = process.env.REACT_APP_REDIRECT_URI;
@@ -465,7 +478,8 @@ function App() {
     window.location.href = url;
   };
 
-  const search = (searchTerm) => {
+  const search = (searchTerm, showOwn) => {
+    setMaxScrollDistance(0);
     setSearchResults([]);
     setSearchedTerm(searchTerm);
     if (!searchTerm) {
@@ -496,7 +510,13 @@ function App() {
         }
       }
     });
-    setSearchResults(results);
+    let filteredResults;
+    if (showOwn) {
+      filteredResults = results.filter(
+        (playlist) => playlist.owner.display_name === userProfile.display_name
+      );
+    }
+    setSearchResults(filteredResults ? filteredResults : results);
   };
 
   return (
@@ -505,7 +525,7 @@ function App() {
         <>
           <Virtuoso
             style={{ height: "100%" }}
-            className=" w-full h-full flex items-center"
+            className=" w-full h-full flex items-center mb-16"
             totalCount={searchResults.length}
             useWindowScroll={true}
             overscan={20}
@@ -521,6 +541,9 @@ function App() {
               dots,
               searchedTerm,
               setAccessToken,
+              setLoadingLogin,
+              showOwnPlaylists,
+              setShowOwnPlaylists,
             }}
             components={{
               Header,
@@ -532,13 +555,14 @@ function App() {
                   playlist={searchResults[index]}
                   searchedTerm={searchedTerm}
                   key={searchResults[index]?.id || index}
+                  maxScrollDistance={maxScrollDistance}
                 />
               );
             }}
           ></Virtuoso>
         </>
       ) : (
-        <LoginPage login={login} errMsg={errMsg} />
+        <LoginPage login={login} errMsg={errMsg} loadingLogin={loadingLogin} />
       )}
     </div>
   );

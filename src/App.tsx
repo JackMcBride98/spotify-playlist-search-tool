@@ -505,7 +505,7 @@ function App() {
         <>
           <Virtuoso
             style={{ height: "100%" }}
-            className=" w-full h-full flex items-center"
+            className=" w-full h-full flex items-center mb-16"
             totalCount={searchResults.length}
             useWindowScroll={true}
             overscan={20}

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 export default function LoginPage({ login, errMsg }) {
   const [showSecretSVG, setShowSecretSVG] = useState(false);
   const [logoClicked, setLogoClicked] = useState(false);
+  const [showMoreInfo, setShowMoreInfo] = useState(false);
 
   useEffect(() => {
     let timer1 = setTimeout(() => setLogoClicked(true), 250);
@@ -99,16 +100,8 @@ export default function LoginPage({ login, errMsg }) {
         />
       </svg>
       <p className="w-80 pb-5">
-        A tool for finding out which of your saved or made playlists contain a
-        given artist or song. The app is currently in development mode, meaning
-        that the creator will have to allow you access to the app. If you would
-        like that send me your spotify account email address and your name to{" "}
-        <a
-          href="mailto:mcbride.jack1@gmail.com"
-          className="underline text-green-300 hover:italic hover:text-green-400"
-        >
-          mcbride.jack1@gmail.com
-        </a>
+        A tool for finding out which of your saved playlists contain a given
+        artist or song.
       </p>
       <motion.button
         whileHover={{ scale: 1.1 }}
@@ -145,6 +138,26 @@ export default function LoginPage({ login, errMsg }) {
         <p>Login with Spotify</p>
       </motion.button>
       {errMsg && <p className="text-red-600">{errMsg}</p>}
+      <motion.button
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        className="text-center p-4 py-2 rounded-full bg-green-600 flex space-x-2 items-center italic"
+        onClick={(e) => setShowMoreInfo(!showMoreInfo)}
+      >
+        i
+      </motion.button>
+      <p className={"w-80 " + (showMoreInfo ? "" : "hidden")}>
+        The app is currently in development mode, meaning that the creator will
+        have to allow you access to the app. If you would like that send me your
+        spotify account email address and your name to{" "}
+        <a
+          href="mailto:mcbride.jack1@gmail.com"
+          className="underline text-green-300 hover:italic hover:text-green-400"
+        >
+          mcbride.jack1@gmail.com
+        </a>{" "}
+        and I will give you access. Currently have 4/25 users.
+      </p>
       <button
         className="ml-16 text-center text-black p-4 rounded-md cursor-default"
         onClick={() => {

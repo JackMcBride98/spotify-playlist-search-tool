@@ -103,7 +103,7 @@ export default function LoginPage({ login, errMsg, loadingLogin }) {
               strokeWidth="7"
             />
           </svg>
-          <p className="w-80 pb-5">
+          <p className="w-72 md:w-80 pb-5">
             A tool for finding out which of your saved playlists contain a given
             artist or song.
           </p>
@@ -150,7 +150,7 @@ export default function LoginPage({ login, errMsg, loadingLogin }) {
           >
             i
           </motion.button>
-          <p className={"w-80 " + (showMoreInfo ? "" : "hidden")}>
+          <p className={"w-72 md:w-80 " + (showMoreInfo ? "" : "hidden")}>
             The app is currently in development mode, meaning that the creator
             will have to allow you access to the app. If you would like that
             send me your spotify account email address and your name to{" "}

@@ -35,7 +35,7 @@ export default function Playlist({
 
       return () => clearTimeout(timer1);
     }
-  }, [searchedTerm, playlist.tracks]);
+  }, [searchedTerm, playlist.tracks]); //eslint-disable-line
 
   return (
     <div

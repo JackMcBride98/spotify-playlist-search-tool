@@ -454,7 +454,7 @@ function App() {
     return () => {
       clearTimeout(timer);
     };
-  }, []);
+  }, []); //eslint-disable-line
 
   const login = (e) => {
     setLoadingLogin(true);

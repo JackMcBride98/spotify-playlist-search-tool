@@ -54,12 +54,16 @@ function App() {
   const [errMsg, setErrMsg] = useState("");
   const [dots, setDots] = useState("");
   const [showScrollToTop, setShowScrollToTop] = useState(false);
+  const [loadingLogin, setLoadingLogin] = useState(false);
 
   const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
   useEffect(() => {
     const params = getHashParams();
     const accessToken = params.access_token;
+    if (accessToken) {
+      setLoadingLogin(true);
+    }
     const state = params.state;
     const storedState = localStorage.getItem("spotifyAuthState");
     let timer;
@@ -73,6 +77,7 @@ function App() {
 
     if (accessToken && (state == null || state !== storedState)) {
       setAccessToken("");
+      setLoadingLogin(false);
     } else {
       localStorage.removeItem("spotifyAuthState");
       if (accessToken) {
@@ -86,11 +91,13 @@ function App() {
             }
           ).then((res) => res.json());
           if (result?.error) {
+            setLoadingLogin(false);
             setErrMsg("You are forbidden access to the app");
             return;
           }
           setUserProfile(result);
           setAccessToken(accessToken);
+          setLoadingLogin(false);
           const storedUserPlaylists = localStorage.getItem("userPlaylists");
           let findIt;
           let uncompressed;
@@ -446,6 +453,7 @@ function App() {
   }, []);
 
   const login = (e) => {
+    setLoadingLogin(true);
     e.preventDefault();
     const client_id = process.env.REACT_APP_SPOTIFY_CLIENT_ID;
     const redirect_uri = process.env.REACT_APP_REDIRECT_URI;
@@ -521,6 +529,7 @@ function App() {
               dots,
               searchedTerm,
               setAccessToken,
+              setLoadingLogin,
             }}
             components={{
               Header,
@@ -538,7 +547,7 @@ function App() {
           ></Virtuoso>
         </>
       ) : (
-        <LoginPage login={login} errMsg={errMsg} />
+        <LoginPage login={login} errMsg={errMsg} loadingLogin={loadingLogin} />
       )}
     </div>
   );

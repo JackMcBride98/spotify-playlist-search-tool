@@ -94,10 +94,16 @@ function App() {
                 Authorization: "Bearer " + accessToken,
               },
             }
-          ).then((res) => res.json());
-          if (result?.error) {
-            setLoadingLogin(false);
-            setErrMsg("You are forbidden access to the app");
+          ).then((res) => {
+            if (res.status === 403) {
+              setAccessToken("");
+              setLoadingLogin(false);
+              setErrMsg("You are forbidden access to the app");
+              return null;
+            }
+            return res.json();
+          });
+          if (!result) {
             return;
           }
           setUserProfile(result);
